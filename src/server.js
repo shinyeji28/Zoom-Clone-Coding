@@ -18,14 +18,16 @@ const handleListen = () => console.log("Listening on http://localhost:3000");
 const server = http.createServer(app);
 const wss = new WebSocket.Server({server});
 
+const sockets = [];  // fack DB - 연결된 소켓의 array 만들기 (메세지를 다른 소켓에 전달해 주기 위해..)
+
 wss.on("connection",(socket) => {   // server의 socket (브라우저와 연결을 위한 소켓)
                                     // socket이 frontend와 real time으로 소통할 수 있음
+    sockets.push(socket);
     console.log("Connected to Browser");
     socket.on("close", () => console.log("Disconnected from the Browser"));                         // 브라우저가 종료되면
     socket.on("message", (message) => {
-        console.log(message.toString('utf8'));
+        sockets.forEach((aSocket) => aSocket.send(message.toString('utf8')));
     });
-    socket.send("hello!");  // send message to front
     
 });  // frontend랑 backend랑 connect 될 때마다 작동
 
