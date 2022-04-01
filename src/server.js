@@ -1,6 +1,7 @@
 import http from "http";
 import express from "express";
 import WebSocket from "ws";  //websockket :브라우저와 서버사이의 연결
+import { disconnect } from "process";
 
 const app = express();
 
@@ -17,9 +18,15 @@ const handleListen = () => console.log("Listening on http://localhost:3000");
 const server = http.createServer(app);
 const wss = new WebSocket.Server({server});
 
-function handleConnection(socket){      // server의 socket (브라우저와 연결을 위한 소켓)
-    console.log(socket);  // socket이 frontend와 real time으로 소통할 수 있음s
-}
-wss.on("connection",handleConnection);  // frontend랑 backend랑 connect 될 때마다 작동
+wss.on("connection",(socket) => {   // server의 socket (브라우저와 연결을 위한 소켓)
+                                    // socket이 frontend와 real time으로 소통할 수 있음
+    console.log("Connected to Browser");
+    socket.on("close", () => console.log("Disconnected from the Browser"));                         // 브라우저가 종료되면
+    socket.on("message", (message) => {
+        console.log(message.toString('utf8'));
+    });
+    socket.send("hello!");  // send message to front
+    
+});  // frontend랑 backend랑 connect 될 때마다 작동
 
 server.listen(3000,handleListen);
