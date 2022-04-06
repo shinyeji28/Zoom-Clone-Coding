@@ -23,10 +23,19 @@ const sockets = [];  // fack DB - 연결된 소켓의 array 만들기 (메세지
 wss.on("connection",(socket) => {   // server의 socket (브라우저와 연결을 위한 소켓)
                                     // socket이 frontend와 real time으로 소통할 수 있음
     sockets.push(socket);
+    socket["nickname"] = "Anon";
     console.log("Connected to Browser");
     socket.on("close", () => console.log("Disconnected from the Browser"));                         // 브라우저가 종료되면
-    socket.on("message", (message) => {
-        sockets.forEach((aSocket) => aSocket.send(message.toString('utf8')));
+    socket.on("message", (msg) => {
+    const message = JSON.parse(msg);// frontend로 부터 받은 string을 javaScript object로 변경
+        switch(message.type){
+            case "new_message":
+                sockets.forEach((aSocket) => aSocket.send(`${socket.nickname}: ${message.payload.toString('utf8')}`));
+                break;
+            case "nickname":
+                socket["nickname"] = message.payload;  // socket은 객체임으로 이와같은 코딩이 가능 => socket안에 정보를 저장 할 수 있음
+                break;
+        }
     });
     
 });  // frontend랑 backend랑 connect 될 때마다 작동
