@@ -23,8 +23,9 @@ wsServer.on("connection",(socket) => {
       console.log(`Socket Event:${event}`);
   });
   socket.on("enter_room", (roomName, done) => {
-    socket.join(roomName);
+    socket.join(roomName);      // join the room
     done();
+    socket.to(roomName).emit("welcome");  // 본인을 제외한 ㄴ방에 있는 모든 사람에게 ~
   });
 });
 
