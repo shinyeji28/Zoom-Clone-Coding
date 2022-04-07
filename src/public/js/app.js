@@ -2,15 +2,24 @@ const socket = io();  // io : 자동적으로 backend와  socket.io를 연결해
 
 const welcome = document.getElementById("welcome");
 const form = welcome.querySelector("form");
+const room = document.getElementById("room");
 
-function backendDone(msg){
-    console.log(`The backend says: `, msg);
+room.hidden = true;
+
+let roomName;
+
+function showRoom(){
+    welcome.hidden = true;
+    room.hidden = false;
+    const h3 = room.querySelector("h3");
+    h3.innerText = `Room ${roomName}`
 }
 
 function handleRoomSubmit(event) {
   event.preventDefault();
   const input = form.querySelector("input");
-  socket.emit("enter_room", { payload: input.value }, backendDone );  // argument 수는 제한이 없음.  단, function을 보낼 땐 마지막에!! (서버에서 function을 호출하면 frontend에서 실행되는 function)
+  socket.emit("enter_room", input.value , showRoom );  // argument 수는 제한이 없음.  단, function을 보낼 땐 마지막에!! (서버에서 function을 호출하면 frontend에서 실행되는 function)
+  roomName = input.value;
   input.value = "";
 }
 
