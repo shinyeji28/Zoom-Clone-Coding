@@ -25,8 +25,15 @@ wsServer.on("connection",(socket) => {
   socket.on("enter_room", (roomName, done) => {
     socket.join(roomName);      // join the room
     done();
-    socket.to(roomName).emit("welcome");  // 본인을 제외한 ㄴ방에 있는 모든 사람에게 ~
+    socket.to(roomName).emit("welcome");  // 본인을 제외한 방에 있는 모든 사람에게 ~
   });
+  socket.on("disconnecting",() => {
+      socket.rooms.forEach((room) => {console.log(room); socket.to(room).emit("bye");})
+  });
+  socket.on("new_message", (msg, room, done) => {
+    socket.to(room).emit("new_message",msg);
+    done();
+  })
 });
 
 // const wss = new WebSocket.Server({server});
