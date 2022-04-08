@@ -42,9 +42,13 @@ wsServer.on("connection",(socket) => {
     socket.join(roomName);      // join the room
     done();
     socket.to(roomName).emit("welcome", socket.nickname);  // 본인을 제외한 방에 있는 모든 사람에게 ~
+    wsServer.emit("room_change", publicRooms());            // 서버의 모든 브라우저에게 전달
   });
   socket.on("disconnecting",() => {
       socket.rooms.forEach((room) => {console.log(room); socket.to(room).emit("bye", socket.nickname);})
+  });
+  socket.on("disconnect",() => {
+    wsServer.emit("room_change", publicRooms());
   });
   socket.on("new_message", (msg, room, done) => {
     socket.to(room).emit("new_message",`${socket.nickname}: ${msg}`);

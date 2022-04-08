@@ -60,3 +60,12 @@ socket.on("bye",(left)=> {
     addMessage(`${left} left ㅠㅠ`);
 });
 socket.on("new_message",addMessage);
+socket.on("room_change",(rooms) => {
+    const roomList = welcome.querySelector("ul");
+    roomList.innerHTML="";
+    rooms.forEach(room => {
+        const li = document.createElement("li");
+        li.innerText = room;
+        roomList.append(li);
+    });
+});
