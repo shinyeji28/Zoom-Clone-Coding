@@ -19,21 +19,23 @@ const httpServer = http.createServer(app);
 const wsServer = SocketIO(httpServer);
 
 wsServer.on("connection",(socket) => {
+  socket["nickname"]="Anon";
   socket.onAny((event) => {                 // 어떤 이벤트이든 콘솔을 찍을 수 있음
       console.log(`Socket Event:${event}`);
   });
   socket.on("enter_room", (roomName, done) => {
     socket.join(roomName);      // join the room
     done();
-    socket.to(roomName).emit("welcome");  // 본인을 제외한 방에 있는 모든 사람에게 ~
+    socket.to(roomName).emit("welcome", socket.nickname);  // 본인을 제외한 방에 있는 모든 사람에게 ~
   });
   socket.on("disconnecting",() => {
-      socket.rooms.forEach((room) => {console.log(room); socket.to(room).emit("bye");})
+      socket.rooms.forEach((room) => {console.log(room); socket.to(room).emit("bye", socket.nickname);})
   });
   socket.on("new_message", (msg, room, done) => {
-    socket.to(room).emit("new_message",msg);
+    socket.to(room).emit("new_message",`${socket.nickname}: ${msg}`);
     done();
   })
+  socket.on("nickname", (nickname) => (socket["nickname"] = nickname));
 });
 
 // const wss = new WebSocket.Server({server});
