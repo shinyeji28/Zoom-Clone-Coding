@@ -18,6 +18,21 @@ const handleListen = () => console.log("Listening on http://localhost:3000");
 const httpServer = http.createServer(app);
 const wsServer = SocketIO(httpServer);
 
+function publicRooms(){         // public room만 반환하는 함수
+  const {
+    sockets: {
+      adapter: {sids, rooms}
+    }
+  } = wsServer;  // sids : socket ids , rooms : room names (socket 내부 구조 사용)
+  const publicRooms = [];
+  rooms.forEach((_, key) => {
+    if(sids.get(key) === undefined){
+      publicRooms.push(key);
+    }
+  });
+  return publicRooms;
+}
+
 wsServer.on("connection",(socket) => {
   socket["nickname"]="Anon";
   socket.onAny((event) => {                 // 어떤 이벤트이든 콘솔을 찍을 수 있음
