@@ -13,10 +13,14 @@ async function getCameras(){
     try{
         const devices = await navigator.mediaDevices.enumerateDevices();
         const cameras = devices.filter((devices) => devices.kind === "videoinput");
+        const currentCamera = myStream.getVideoTracks()[0];
         cameras.forEach(camera => {
             const option = document.createElement("option")
             option.value = camera.deviceId;
             option.innerText = camera.label;
+            if(currentCamera.label == camera.label){
+                option.selected = true;
+            }
             camerasSelect.appendChild(option);
         })
     }catch (e){
@@ -25,14 +29,23 @@ async function getCameras(){
     
 }
 
-async function getMedia(){
+async function getMedia(deviceId){
+    const initialConstrains = {         // 초기 deviceId가 없을 경우 사용할 constrains
+        audio: true, 
+        video: { facingMode: "user" }  // 전면 카메라
+    }
+    const cameraConstaints = {
+        audio: true,
+        video: { deviceId: {exact: deviceId}}
+    };
     try{
-        myStream = await navigator.mediaDevices.getUserMedia({    //navigator.mediaDevices.getUserMedia: user media의 string을 줌
-            audio: true,
-            video: true
-        });
+        myStream = await navigator.mediaDevices.getUserMedia(    //navigator.mediaDevices.getUserMedia: user media의 string을 줌
+            deviceId? cameraConstaints : initialConstrains
+        );
         myFace.srcObject =  myStream;
-        await getCameras();
+        if(!deviceId){              // 디바이스 리스트가 계속 생겨나는 것을 방지하기 위해 ..
+            await getCameras();     
+        }
     } catch (e) {
         console.log(`video error - ${e}`);
     }
@@ -59,6 +72,10 @@ function handleCameraClick(){
         cameraOff = true;
     }
 }
+function handleCameraChange(){
+    getMedia(camerasSelect.value);
+}
 
 muteBtn.addEventListener("click",handleMuteClick);
 cameraBtn.addEventListener("click",handleCameraClick);
+camerasSelect.addEventListener("input", handleCameraChange);
