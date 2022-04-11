@@ -1,7 +1,7 @@
 import http from "http";
-import SocketIO from "socket.io";
+import {Server} from "socket.io";
+import { instrument } from "@socket.io/admin-ui";
 import express from "express";
-import { disconnect } from "process";
 
 const app = express();
 
@@ -16,7 +16,15 @@ app.get("/*",(req, res)=> res.redirect("/"));             // 유저가 어떤 ur
 const handleListen = () => console.log("Listening on http://localhost:3000");
 
 const httpServer = http.createServer(app);
-const wsServer = SocketIO(httpServer);
+const wsServer = new Server(httpServer,  {   
+  cors: {                                           //Admin-ui (온라인 데모가 작동할 수 있도록 환경 설정)
+    origin: ["https://admin.socket.io"],
+    credentials: true
+  }
+});
+instrument(wsServer, {
+  auth: false                                       // Admin-ui (패스워드 false)  
+});
 
 function publicRooms(){         // public room만 반환하는 함수
   const {
