@@ -13,6 +13,7 @@ let myStream;  // stream : video와 audio가 결합된 것
 let muted = false;
 let cameraOff = false;
 let roomName;
+let myPeerConnection;
 
 async function getCameras(){
     try{
@@ -89,10 +90,11 @@ camerasSelect.addEventListener("input", handleCameraChange);
 const welcome = document.getElementById("welcome");
 const welcomeForm = welcome.querySelector("form");
 
-function startMedia(){
+async function startMedia(){
     welcome.hidden = true;
     call.hidden = false;
-    getMedia();
+    await getMedia();
+    makeConnection();
 }
 
 function handleWelcomeSubmit(event){
@@ -105,7 +107,24 @@ function handleWelcomeSubmit(event){
 welcomeForm.addEventListener("submit", handleWelcomeSubmit);
 
 // Socket Code 
-
-socket.on("welcome", () => {
-    console.log("someone joined");
+                    // peer A
+socket.on("welcome", async () => {
+    const offer = await myPeerConnection.createOffer();
+    myPeerConnection.setLocalDescription(offer);   // 다른 브라우저 참여할 수 있도록 초대장을 만드는 것(내가 누구고 어디있고.. 등등) - 실시간 세션 설명
+    console.log("sent the offer");
+    socket.emit("offer", offer, roomName);     // 소켓 연결된 브라우저에게 초대장을 보냄
 })
+                    // peer B
+socket.on("offer", offer => {
+    console.log(offer);
+})
+
+// RCT Code
+
+function makeConnection(){
+    myPeerConnection = new RTCPeerConnection();  // peer-to-peer 연결 (signaling process)
+    myStream
+        .getTracks()
+        .forEach(track => myPeerConnection.addTrack(track, myStream));  // 카메라, 마이크 데이터 stream을 myPeerConnection안으로 집어 넣음
+
+}
