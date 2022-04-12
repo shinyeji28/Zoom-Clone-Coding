@@ -90,17 +90,18 @@ camerasSelect.addEventListener("input", handleCameraChange);
 const welcome = document.getElementById("welcome");
 const welcomeForm = welcome.querySelector("form");
 
-async function startMedia(){
+async function initCall(){
     welcome.hidden = true;
     call.hidden = false;
     await getMedia();
     makeConnection();
 }
 
-function handleWelcomeSubmit(event){
+async function handleWelcomeSubmit(event){
     event.preventDefault();
     const input = welcomeForm.querySelector("input");
-    socket.emit("join_room", input.value, startMedia);
+    await initCall();                      
+    socket.emit("join_room", input.value);
     roomName = input.value;
     input.value = "";
 }
@@ -115,13 +116,20 @@ socket.on("welcome", async () => {
     socket.emit("offer", offer, roomName);     // 소켓 연결된 브라우저에게 초대장을 보냄
 })
                     // peer B
-socket.on("offer", offer => {
-    console.log(offer);
+socket.on("offer", async(offer) => {
+    myPeerConnection.setRemoteDescription(offer); // 받은 offer의 description을 세팅
+    const answer = await myPeerConnection.createAnswer();
+
+    myPeerConnection.setLocalDescription(answer);
+    socket.emit("answer", answer, roomName); 
 })
 
+socket.on("answer", answer => {
+    myPeerConnection.setRemoteDescription(answer);
+})
 // RCT Code
 
-function makeConnection(){
+function makeConnection(){  // addStream()
     myPeerConnection = new RTCPeerConnection();  // peer-to-peer 연결 (signaling process)
     myStream
         .getTracks()
