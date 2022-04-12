@@ -117,22 +117,42 @@ socket.on("welcome", async () => {
 })
                     // peer B
 socket.on("offer", async(offer) => {
+    console.log("received the offer");
     myPeerConnection.setRemoteDescription(offer); // 받은 offer의 description을 세팅
     const answer = await myPeerConnection.createAnswer();
 
     myPeerConnection.setLocalDescription(answer);
     socket.emit("answer", answer, roomName); 
+    console.log("sent the answer");
 })
 
 socket.on("answer", answer => {
+    console.log("received the answer");
     myPeerConnection.setRemoteDescription(answer);
 })
+
+socket.on("ice", ice => {
+    console.log("received candidate");
+    myPeerConnection.addIceCandidate(ice);
+});
+
 // RCT Code
 
 function makeConnection(){  // addStream()
     myPeerConnection = new RTCPeerConnection();  // peer-to-peer 연결 (signaling process)
+    myPeerConnection.addEventListener("icecandidate", handleIce);  
+    myPeerConnection.addEventListener("addstream", handleAddStream);   // add peers stream
     myStream
         .getTracks()
         .forEach(track => myPeerConnection.addTrack(track, myStream));  // 카메라, 마이크 데이터 stream을 myPeerConnection안으로 집어 넣음
+}
 
+function handleIce(data){
+    console.log("sent candidate");
+    socket.emit("ice", data.candidate, roomName); // 자기 브라우저의 모든 소통방식을 다른 브라우저에게 넘겨줘야 함
+}
+
+function handleAddStream(data){ 
+    const peersStream = document.getElementById("peerStream");
+    peersStream.srcObject = data.stream;
 }
