@@ -77,8 +77,13 @@ function handleCameraClick(){
         cameraOff = true;
     }
 }
-function handleCameraChange(){
-    getMedia(camerasSelect.value);
+async function handleCameraChange(){
+    await getMedia(camerasSelect.value);                // 내 브라우저 카메라를 바꾸고
+    const videoTrack = myStream.getVideoTracks()[0];    // peer보내진 내 비디오 데이터를 컨트롤
+    const videoSender =  myPeerConnection
+        .getSenders()
+        .find((sender) => sender.track.kind === "video");     // sender : peer로 보내진 media stream track을 컨트롤
+    videoSender.replaceTrack(videoTrack);
 }
 
 muteBtn.addEventListener("click",handleMuteClick);
